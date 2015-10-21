@@ -90,22 +90,31 @@ template <typename Hash>
 class hash {
     Hash h;
     uint64_t offset;
+    uint64_t initialsize;
     bool issparse;
+    bool isdone;
     std::string res;
   public:
-    hash(bool asparse=true):h(),offset(0),issparse(asparse),res("BOGUS-HASH"){}
+    //Constructor for new and mutable files
+    hash(bool asparse=true):h(),offset(0),initialsize(0),issparse(asparse),isdone(false),res("INCOMPLETE-OPPORTUNISTIC_HASHING"){}
+    //Constructor for immutable files
+    hash(uint64_t fixedsize):h(),offset(0),initialsize(fixedsize),issparse(false),isdone(false),res("INCOMPLETE-OPPORTUNISTIC_HASHING"){}
     void sparse(uint64_t len) {
         byte sparsenull[1024];
         memset(sparsenull,0,len);
         h.Update(sparsenull,len);
         offset += len;
     }
-    //The opportunistic hashing function will be fed chunks as user processes read/write to/from the pseudo file.
+    //When data is written to underlying storage, written_chunk should be fed the same data and offset.
     void written_chunk(const char *buf, size_t size, uint64_t off){
-        //If the offset is 0 and something happened before, we need to restart and ignore our previous work.
-        if (off < offset) {
+        initialsize =0; //No more guessing when we are ready, things are getting written so they get messy now.
+        //If the offset is 0 and something happened before, or if before we thought we were done,  
+        //we need to restart and ignore our previous work.
+        if ((off < offset) or isdone) {
             h.Restart();
             offset=0;
+            isdone=false;
+            res="INCOMPLETE-OPPORTUNISTIC_HASHING";
         }
         if (off > offset) {
           //There is a gap. 
@@ -127,9 +136,10 @@ class hash {
           offset = off + size;
         }
     }
+    //When data is read from underlying storage, read_chunk should be fed the same data and offset.
     void read_chunk(const char *buf, size_t size, uint64_t off)  {
         //We are processing an existing file; this should be easy.
-        if (off <= offset and (off+size) > offset) {
+        if (!isdone and off <= offset and (off+size) > offset) {
           //Fragment overlaps our offset; find the part that we didn't process yet.
           const char *buffseg=buf + offset - off;
           size_t chunksize = size - (offset - off);
@@ -137,18 +147,23 @@ class hash {
           h.Update(reinterpret_cast<const byte *>(buffseg),chunksize);
           //Update our offset.
           offset = off + size;
+          if (offset > 0 and offset == initialsize) {
+            done();
+          }
         }
         //Anything else we must ignore.
     }
     //This method must be called only after c_offset() equals the final file size.
     void done() {
-       byte r[Hash::DIGESTSIZE];
-       char hex[Hash::DIGESTSIZE*2];
-       h.Final(r);
-       for (int i=0;i<Hash::DIGESTSIZE;i++) {
-         std::sprintf(hex+2*i, "%02X", r[i]);
+       if (!isdone) {
+         byte r[Hash::DIGESTSIZE];
+         char hex[Hash::DIGESTSIZE*2];
+         h.Final(r);
+         for (int i=0;i<Hash::DIGESTSIZE;i++) {
+           std::sprintf(hex+2*i, "%02X", r[i]);
+         }
+         res=std::string(hex,Hash::DIGESTSIZE*2);
        }
-       res=std::string(hex,Hash::DIGESTSIZE*2);
     }
     //The current internal offset for our opportunistic hashing. Don't call done() untill the offset
     //indicated here equates the size of the actual file entity.
@@ -159,6 +174,7 @@ class hash {
     std::string result() {
       return res;
     }
+    
 };
 }
 
