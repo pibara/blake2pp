@@ -8,11 +8,11 @@ std::string jumping() {
   for (int index=0;index<4096;index++) {
     buf[index]=index%128;
   }
-  oh.chunk(buf+1024,2048,1024); //Must be ignored
-  oh.chunk(buf,2048,0); //First half
-  oh.chunk(buf+1024,2048,1024); //Overlapping chunk upto three quarter.
-  oh.chunk(buf+1000,1000,1000); //Should also be ignored, already got this one.
-  oh.chunk(buf+3000,1096,3000); //Final overlapping chunk.
+  oh.read_chunk(buf+1024,2048,1024); //Must be ignored
+  oh.read_chunk(buf,2048,0); //First half
+  oh.read_chunk(buf+1024,2048,1024); //Overlapping chunk upto three quarter.
+  oh.read_chunk(buf+1000,1000,1000); //Should also be ignored, already got this one.
+  oh.read_chunk(buf+3000,1096,3000); //Final overlapping chunk.
   oh.done();
   return oh.result();
 }; 

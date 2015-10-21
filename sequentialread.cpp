@@ -9,7 +9,7 @@ std::string sequential() {
     buf[index]=index;
   }
   for (int i=0;i<4096;i+=128) {
-    oh.chunk(buf,128,i);
+    oh.read_chunk(buf,128,i);
   };
   oh.done();
   return oh.result();

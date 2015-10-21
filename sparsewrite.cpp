@@ -3,7 +3,7 @@
 
 template <typename OHash>
 std::string sparse(bool skip) {
-  OHash oh(true,true); //Writing assuming sparse.
+  OHash oh(true); //Writing assuming sparse.
   char buf[4096];
   for (int index=0;index<4096;index++) {
     buf[index]=index%128;
@@ -11,12 +11,12 @@ std::string sparse(bool skip) {
   for (int index=1024;index<3073;index++) {
     buf[index]=0;
   }
-  oh.chunk(buf,1024,0); //First part
+  oh.written_chunk(buf,1024,0); //First part
   if (not skip) {
-    oh.chunk(buf+1024,1024,1024); //Second part
-    oh.chunk(buf+2048,1024,2048); //Third part
+    oh.written_chunk(buf+1024,1024,1024); //Second part
+    oh.written_chunk(buf+2048,1024,2048); //Third part
   }
-  oh.chunk(buf+3072,1024,3072); //Last part
+  oh.written_chunk(buf+3072,1024,3072); //Last part
   oh.done();
   return oh.result();
 }; 

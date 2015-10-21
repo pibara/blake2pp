@@ -90,11 +90,10 @@ template <typename Hash>
 class hash {
     Hash h;
     uint64_t offset;
-    bool isnew;
     bool issparse;
     std::string res;
   public:
-    hash(bool anew=false,bool asparse=true):h(),offset(0),isnew(anew),issparse(asparse && anew),res("BOGUS-HASH"){}
+    hash(bool asparse=true):h(),offset(0),issparse(asparse),res("BOGUS-HASH"){}
     void sparse(uint64_t len) {
         byte sparsenull[1024];
         memset(sparsenull,0,len);
@@ -102,9 +101,7 @@ class hash {
         offset += len;
     }
     //The opportunistic hashing function will be fed chunks as user processes read/write to/from the pseudo file.
-    void chunk(const char *buf, size_t size, uint64_t off){
-      if (isnew) {
-        //We are processing a file that is just being created.
+    void written_chunk(const char *buf, size_t size, uint64_t off){
         //If the offset is 0 and something happened before, we need to restart and ignore our previous work.
         if (off < offset) {
             h.Restart();
@@ -129,8 +126,9 @@ class hash {
           h.Update(reinterpret_cast<const byte *>(buf),size);
           offset = off + size;
         }
-      } else {
-        //We are processing an immutable existing file; this should be easy.
+    }
+    void read_chunk(const char *buf, size_t size, uint64_t off)  {
+        //We are processing an existing file; this should be easy.
         if (off <= offset and (off+size) > offset) {
           //Fragment overlaps our offset; find the part that we didn't process yet.
           const char *buffseg=buf + offset - off;
@@ -141,7 +139,6 @@ class hash {
           offset = off + size;
         }
         //Anything else we must ignore.
-      }  
     }
     //This method must be called only after c_offset() equals the final file size.
     void done() {
@@ -155,7 +152,7 @@ class hash {
     }
     //The current internal offset for our opportunistic hashing. Don't call done() untill the offset
     //indicated here equates the size of the actual file entity.
-    uint64_t c_offset(){
+    uint64_t hashing_offset(){
       return offset;
     }
     //Get the hexadecimal representation of the hash.

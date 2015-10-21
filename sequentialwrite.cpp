@@ -3,13 +3,13 @@
 
 template <typename OHash>
 std::string sequential() {
-  OHash oh(true);
+  OHash oh;
   char buf[128];
   for (int index=0;index<128;index++) {
     buf[index]=index;
   }
   for (int i=0;i<4096;i+=128) {
-    oh.chunk(buf,128,i);
+    oh.written_chunk(buf,128,i);
   };
   oh.done();
   return oh.result();

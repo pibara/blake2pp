@@ -3,21 +3,21 @@
 
 template <typename OHash>
 std::string jumping() {
-  OHash oh(true,false); //Writing without assuming sparse.
+  OHash oh(false); //Writing without assuming sparse.
   char buf[4096];
   for (int index=0;index<4096;index++) {
     buf[index]=index%128;
   }
-  oh.chunk(buf+1024,2048,1024); //Must be ignored
-  oh.chunk(buf,2048,0); //First half
-  oh.chunk(buf+1024,2048,1024); //Overlapping chunk, this means a reset.
-  oh.chunk(buf+1000,1000,1000); //Must be ignored again.
-  oh.chunk(buf+3000,1096,3000); //Final overlapping chunk, must be ignored.
-  oh.chunk(buf,2048,0); //First half again.
-  oh.chunk(buf+3000,1096,3000); //Final chunk, must be ignored again.
-  oh.chunk(buf+2048,1024,2048); //This should be processed.
-  oh.chunk(buf+4000,96,4000); //Final overlapping chunk, must be ignored again.
-  oh.chunk(buf+3072,1024,3072); //This should be processed, we should have everything now.
+  oh.written_chunk(buf+1024,2048,1024); //Must be ignored
+  oh.written_chunk(buf,2048,0); //First half
+  oh.written_chunk(buf+1024,2048,1024); //Overlapping chunk, this means a reset.
+  oh.written_chunk(buf+1000,1000,1000); //Must be ignored again.
+  oh.written_chunk(buf+3000,1096,3000); //Final overlapping chunk, must be ignored.
+  oh.written_chunk(buf,2048,0); //First half again.
+  oh.written_chunk(buf+3000,1096,3000); //Final chunk, must be ignored again.
+  oh.written_chunk(buf+2048,1024,2048); //This should be processed.
+  oh.written_chunk(buf+4000,96,4000); //Final overlapping chunk, must be ignored again.
+  oh.written_chunk(buf+3072,1024,3072); //This should be processed, we should have everything now.
   oh.done();
   return oh.result();
 }; 
