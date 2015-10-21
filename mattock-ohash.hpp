@@ -165,6 +165,10 @@ class hash {
          res=std::string(hex,Hash::DIGESTSIZE*2);
        }
     }
+    //Allow client to check if ohash thinks it's done already.
+    bool is_done() {
+      return isdone;
+    }
     //The current internal offset for our opportunistic hashing. Don't call done() untill the offset
     //indicated here equates the size of the actual file entity.
     uint64_t hashing_offset(){
