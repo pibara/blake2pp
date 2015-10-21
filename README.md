@@ -10,7 +10,7 @@ point where its continued use could soon become a serious issue to computer fore
 
 The envisioned migrational path to an alternate hashing algoritm is the following:
 
-* Lagacy SHA1 mode
+* Legacy SHA1 mode
 * Transitional mode using a concatenation of a BLAKE2BP hash and a SHA1 hash (about 20% loss of performance)
 * Fast mode using just BLAKE2BP (about 300% increase in performance)
 
