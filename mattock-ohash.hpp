@@ -43,7 +43,7 @@ namespace compatibility {
         s2.Final(digest+32); //Than the SHA1 after that.
       }
       void Restart() {
-        blake2bp_init(&s,DIGESTSIZE);
+        blake2bp_init(&s,32);
         s2.Restart();
       }
   };

@@ -3,7 +3,7 @@
 
 template <typename OHash>
 std::string sequential() {
-  OHash oh;
+  OHash oh(true);
   char buf[128];
   for (int index=0;index<128;index++) {
     buf[index]=index;
